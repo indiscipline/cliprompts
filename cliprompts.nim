@@ -72,19 +72,16 @@ runnableExamples("-r:off"):
 ## Cancellation and Cleanup
 ## ------------------------
 ##
-## Prompt-local cancellation is handled by cliprompts itself. If the user
-## cancels with `Esc` or `Ctrl+C` while the prompt loop is running, the active
-## interactive frame is cleared, visible terminal state is restored, and the
-## prompt raises `IOError` to the caller.
+## While a cliprompts prompt is active, `Ctrl+C` is captured as prompt
+## cancellation rather than passed through as a process-level interrupt.
+## If the user cancels an active prompt with `Esc` or `Ctrl+C`, cliprompts
+## clears the interactive frame, restores visible terminal state, and raises
+## `IOError` to the caller.
 ##
-## This guarantee is intentionally scoped to cancellation observed inside the
-## prompt loop. It does not cover process-level termination outside that flow,
-## such as an unhandled exception aborting the host program, `quit` from
-## application code, or a custom process-wide `Ctrl+C` policy.
-##
-## If your application may terminate while a prompt is active, add your own
-## fallback cleanup in the application shutdown path. For that purpose cliprompts
-## exposes `restoreTerminalState`_ — a best-effort facade-level proc:
+## That guarantee applies only while control stays inside the prompt loop. If
+## the host program terminates outside that flow, for example via `quit`, an
+## unhandled exception, or an application-defined `Ctrl+C`/signal handler,
+## use `restoreTerminalState`_ in your shutdown path:
 ##
 ## .. code-block:: nim
 ##
@@ -95,9 +92,10 @@ runnableExamples("-r:off"):
 ##   finally:
 ##     restoreTerminalState()
 ##
-## Use `restoreTerminalState()`_ only in application-level fallback cleanup.
+## `restoreTerminalState()`_ is a best-effort application-level fallback.
 ## Normal prompt completion and prompt-local cancellation already restore
-## terminal state internally.
+## terminal state internally, and cliprompts does not install a process-global
+## `Ctrl+C` hook for you.
 ##
 ## Implementation notes
 ## --------------------

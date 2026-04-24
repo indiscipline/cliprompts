@@ -8,11 +8,21 @@ from std/strutils import PrintableChars
 when defined(windows):
   import std/winlean
 
+  proc getConsoleMode(hConsoleHandle: Handle, dwMode: ptr DWORD): WINBOOL {.
+    stdcall, dynlib: "kernel32", importc: "GetConsoleMode".}
+
+  proc setConsoleMode(hConsoleHandle: Handle, dwMode: DWORD): WINBOOL {.
+    stdcall, dynlib: "kernel32", importc: "SetConsoleMode".}
+
 export PrintableChars
 
 when defined(windows):
   const
     KeyEvent = 1'i16
+    EnableProcessedInput = 0x0001'i32
+    LeftCtrlPressed = 0x0008'i32
+    RightCtrlPressed = 0x0004'i32
+    VkC = 0x43'i16
     VkBack = 0x08'i16
     VkTab = 0x09'i16
     VkReturn = 0x0D'i16
@@ -189,21 +199,49 @@ when defined(windows):
     else:
       InputKey(kind: ikUnknown)
 
+  proc decodeConsoleChar(ch: char): InputKey =
+    let direct = decodeDirectKey(ch)
+    if direct.kind != ikUnknown:
+      direct
+    elif ch in PrintableChars:
+      InputKey(kind: ikChar, ch: ch)
+    else:
+      InputKey(kind: ikUnknown)
+
+  proc decodeConsoleKeyEvent(keyEvent: KEY_EVENT_RECORD): InputKey =
+    let ctrlPressed =
+      (keyEvent.dwControlKeyState and DWORD(LeftCtrlPressed or RightCtrlPressed)) != 0
+
+    if ctrlPressed and keyEvent.wVirtualKeyCode == VkC:
+      return InputKey(kind: ikCtrlC)
+
+    result = decodeVirtualKey(keyEvent.wVirtualKeyCode)
+    if result.kind != ikUnknown:
+      return
+    if keyEvent.uChar != 0:
+      return decodeConsoleChar(char(keyEvent.uChar))
+    result = InputKey(kind: ikUnknown)
+
   proc getConsoleKey*(): InputKey =
     ## Reads a Windows console key without losing special-key information.
     let fd = getStdHandle(STD_INPUT_HANDLE)
     var keyEvent = KEY_EVENT_RECORD()
     var numRead: cint
+    var oldMode: DWORD
+    let hasConsoleMode = getConsoleMode(fd, addr oldMode) != 0
 
-    while true:
-      doAssert(waitForSingleObject(fd, INFINITE) == WAIT_OBJECT_0)
-      doAssert(readConsoleInput(fd, addr(keyEvent), 1, addr(numRead)) != 0)
+    if hasConsoleMode:
+      discard setConsoleMode(fd, oldMode and not DWORD(EnableProcessedInput))
 
-      if numRead == 0 or keyEvent.eventType != KeyEvent or keyEvent.bKeyDown == 0:
-        continue
+    try:
+      while true:
+        doAssert(waitForSingleObject(fd, INFINITE) == WAIT_OBJECT_0)
+        doAssert(readConsoleInput(fd, addr(keyEvent), 1, addr(numRead)) != 0)
 
-      result = decodeVirtualKey(keyEvent.wVirtualKeyCode)
-      if result.kind != ikUnknown:
-        return
-      if keyEvent.uChar != 0:
-        return InputKey(kind: ikChar, ch: char(keyEvent.uChar))
+        if numRead == 0 or keyEvent.eventType != KeyEvent or keyEvent.bKeyDown == 0:
+          continue
+
+        return decodeConsoleKeyEvent(keyEvent)
+    finally:
+      if hasConsoleMode:
+        discard setConsoleMode(fd, oldMode)

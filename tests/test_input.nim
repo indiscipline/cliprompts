@@ -11,6 +11,10 @@ suite "Input parsing":
     let event = parseInput('\3', ['\3'])
     check event.action == Cancel
 
+  test "parseKey converts Ctrl+C char to ikCtrlC":
+    let key = parseKey('\3', ['\3'])
+    check key == InputKey(kind: ikCtrlC)
+
   test "Space produces Select":
     let event = parseInput(' ', [' '])
     check event.action == Select

@@ -1,5 +1,5 @@
 --experimental:views
---hints:off
+#--hints:off
 
 task test, "Run tests":
   exec "nimble test"
