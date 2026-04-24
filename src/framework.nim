@@ -20,43 +20,41 @@ proc runInteractive*[S](
   var frame = FrameState(lastVisualHeight: 0)
 
   backend.hideCursor()
-  defer: backend.showCursor()
+  try:
+    while true:
+      # Render current state
+      let logicalLines = renderFn(state)
+      let visualLines = wrapLines(logicalLines, backend.width)
+      let newHeight = visualLines.len
 
-  while true:
-    # Render current state
-    let logicalLines = renderFn(state)
-    let visualLines = wrapLines(logicalLines, backend.width)
-    let newHeight = visualLines.len
+      # Clear previous frame (width-aware!)
+      if frame.lastVisualHeight > 0:
+        backend.clearLinesFromCurrent(frame.lastVisualHeight)
 
-    # Clear previous frame (width-aware!)
+      # Draw new frame
+      for i, line in visualLines:
+        if i < visualLines.high:
+          backend.write(line, "\n")
+        else:
+          backend.write(line)
+
+      # Update frame tracking
+      frame.lastVisualHeight = newHeight
+
+      # Get input
+      let key = backend.getKey()
+      let event = parseInput(key, textual)
+
+      # Handle cancellation
+      if event.action == Cancel:
+        raise newException(IOError, "User cancelled")
+
+      # Update state - returns false to exit
+      if not handleFn(state, event):
+        break
+  finally:
     if frame.lastVisualHeight > 0:
       backend.clearLinesFromCurrent(frame.lastVisualHeight)
-
-    # Draw new frame
-    for i, line in visualLines:
-      if i < visualLines.high:
-        backend.write(line, "\n")
-      else:
-        backend.write(line)
-
-    # Update frame tracking
-    frame.lastVisualHeight = newHeight
-
-    # Get input
-    let key = backend.getKey()
-    let event = parseInput(key, textual)
-
-    # Handle cancellation
-    if event.action == Cancel:
-      backend.showCursor()
-      raise newException(IOError, "User cancelled")
-
-    # Update state - returns false to exit
-    if not handleFn(state, event):
-      break
-
-  # Final cleanup
-  if frame.lastVisualHeight > 0:
-    backend.clearLinesFromCurrent(frame.lastVisualHeight)
+    backend.restoreTerminalState()
 
   return state

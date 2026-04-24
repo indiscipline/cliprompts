@@ -57,8 +57,9 @@
   <li><a class="reference" id="clipromptscolon-interactive-terminal-prompts_toc" href="#clipromptscolon-interactive-terminal-prompts">cliprompts: Interactive Terminal Prompts</a></li>
 <ul class="simple"><li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-why-cliprompts_toc" href="#clipromptscolon-interactive-terminal-prompts-why-cliprompts">Why cliprompts</a></li>
 <li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-quick-start_toc" href="#clipromptscolon-interactive-terminal-prompts-quick-start">Quick start</a></li>
-<li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-implementation-notes_toc" href="#clipromptscolon-interactive-terminal-prompts-implementation-notes">Implementation notes</a></li>
 <li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-notes-on-return-values_toc" href="#clipromptscolon-interactive-terminal-prompts-notes-on-return-values">Notes on return values</a></li>
+<li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-cancellation-and-cleanup_toc" href="#clipromptscolon-interactive-terminal-prompts-cancellation-and-cleanup">Cancellation and Cleanup</a></li>
+<li><a class="reference" id="clipromptscolon-interactive-terminal-prompts-implementation-notes_toc" href="#clipromptscolon-interactive-terminal-prompts-implementation-notes">Implementation notes</a></li>
 </ul><li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
 </li>
@@ -142,6 +143,10 @@
   <li><a class="reference" href="#promptStrings%2Cstring%2CopenArray%5Bstring%5D" title="promptStrings(question: string; default: openArray[string] = []): seq[string]">promptStrings(question: string; default: openArray[string] = []): seq[string]</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">restoreTerminalState
+  <li><a class="reference" href="#restoreTerminalState" title="restoreTerminalState()">restoreTerminalState()</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">setBackend
   <li><a class="reference" href="#setBackend%2CTerminalBackend" title="setBackend(backend: TerminalBackend)">setBackend(backend: TerminalBackend)</a></li>
 
@@ -165,7 +170,7 @@
     <div id="tocRoot"></div>
     
     <p class="module-desc">
-<h1><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts" href="#clipromptscolon-interactive-terminal-prompts">cliprompts: Interactive Terminal Prompts</a></h1><table class="docinfo" frame="void" rules="none"><col class="docinfo-name" /><col class="docinfo-content" /><tbody valign="top"><tr><th class="docinfo-name">Version:</th><td>0.1.0</td></tr>
+<h1><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts" href="#clipromptscolon-interactive-terminal-prompts">cliprompts: Interactive Terminal Prompts</a></h1><table class="docinfo" frame="void" rules="none"><col class="docinfo-name" /><col class="docinfo-content" /><tbody valign="top"><tr><th class="docinfo-name">Version:</th><td>0.1.1</td></tr>
 </tbody></table><p>Interactive prompts for terminal applications: selection, filtered search, string and number input, enum selection, date parsing — all with correct visual cleanup on any terminal width.</p>
 
 <h2><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts-why-cliprompts" href="#clipromptscolon-interactive-terminal-prompts-why-cliprompts">Why cliprompts</a></h2><ul class="simple"><li><strong>Ergonomic</strong>: Single import gives you selection, search, text, numbers, enums, and dates.</li>
@@ -203,13 +208,22 @@
 <span class="Keyword">let</span> <span class="Identifier">col</span> <span class="Operator">=</span> <span class="Identifier">promptEnum</span><span class="Punctuation">[</span><span class="Identifier">Color</span><span class="Punctuation">]</span><span class="Punctuation">(</span><span class="StringLit">&quot;Favorite color&quot;</span><span class="Punctuation">,</span> <span class="Identifier">sortAlpha</span> <span class="Operator">=</span> <span class="Identifier">true</span><span class="Punctuation">)</span>
 <span class="Comment"># Partial enum selection</span>
 <span class="Keyword">let</span> <span class="Identifier">opt</span> <span class="Operator">=</span> <span class="Identifier">promptEnum</span><span class="Punctuation">[</span><span class="Identifier">Color</span><span class="Punctuation">]</span><span class="Punctuation">(</span><span class="StringLit">&quot;Pick an accent&quot;</span><span class="Punctuation">,</span> <span class="Punctuation">{</span><span class="Identifier">Red</span><span class="Punctuation">,</span> <span class="Identifier">Blue</span><span class="Punctuation">}</span><span class="Punctuation">,</span> <span class="Identifier">sortAlpha</span> <span class="Operator">=</span> <span class="Identifier">true</span><span class="Punctuation">)</span></pre>
-<h2><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts-implementation-notes" href="#clipromptscolon-interactive-terminal-prompts-implementation-notes">Implementation notes</a></h2><p>Architecture follows the classic &quot;state → view&quot; pattern with a backend abstraction layer. Terminal I/O is isolated behind <tt class="docutils literal"><span class="pre"><span class="Identifier">TerminalBackend</span></span></tt>, allowing <tt class="docutils literal"><span class="pre"><span class="Identifier">MockTerminal</span></span></tt> for tests and real <tt class="docutils literal"><span class="pre"><span class="Identifier">RealTerminal</span></span></tt> for production. The modular design keeps rendering logic separate from I/O and state management.</p>
-<p>Dependencies: <tt class="docutils literal"><span class="pre"><span class="Identifier">std</span><span class="Operator">/</span><span class="Punctuation">[</span><span class="Identifier">terminal</span><span class="Punctuation">,</span> <span class="Identifier">times</span><span class="Punctuation">,</span> <span class="Identifier">strutils</span><span class="Punctuation">,</span> <span class="Identifier">algorithm</span><span class="Punctuation">,</span> <span class="Identifier">sequtils</span><span class="Punctuation">,</span> <span class="Identifier">options</span><span class="Punctuation">]</span></span></tt>.</p>
-
 <h2><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts-notes-on-return-values" href="#clipromptscolon-interactive-terminal-prompts-notes-on-return-values">Notes on return values</a></h2><ul class="simple"><li><tt class="docutils literal"><span class="pre"><span class="Identifier">promptSelection</span></span></tt> always returns a <tt class="docutils literal"><span class="pre"><span class="Identifier">set</span><span class="Punctuation">[</span><span class="Identifier">int16</span><span class="Punctuation">]</span></span></tt> of selected indices. Single-select prompts therefore return a singleton set.</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">promptSearch</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Identifier">promptSearchMut</span></span></tt> return the selected option index. <tt class="docutils literal"><span class="pre"><span class="Identifier">promptSearchMut</span></span></tt> additionally updates the caller-provided query buffer: after a match it becomes the chosen display text; with <tt class="docutils literal"><span class="pre"><span class="Identifier">allowAny</span> <span class="Operator">=</span> <span class="Identifier">true</span></span></tt> and no match it remains the raw typed query.</li>
 <li>Search matching is case-insensitive and token-based: whitespace splits the query into tokens and every token must appear as a substring in the option text.</li>
 </ul>
+
+<h2><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts-cancellation-and-cleanup" href="#clipromptscolon-interactive-terminal-prompts-cancellation-and-cleanup">Cancellation and Cleanup</a></h2><p>Prompt-local cancellation is handled by cliprompts itself. If the user cancels with <tt class="docutils literal"><span class="pre"><span class="Identifier">Esc</span></span></tt> or <tt class="docutils literal"><span class="pre"><span class="Identifier">Ctrl</span><span class="Operator">+</span><span class="Identifier">C</span></span></tt> while the prompt loop is running, the active interactive frame is cleared, visible terminal state is restored, and the prompt raises <tt class="docutils literal"><span class="pre"><span class="Identifier">IOError</span></span></tt> to the caller.</p>
+<p>This guarantee is intentionally scoped to cancellation observed inside the prompt loop. It does not cover process-level termination outside that flow, such as an unhandled exception aborting the host program, <tt class="docutils literal"><span class="pre"><span class="Identifier">quit</span></span></tt> from application code, or a custom process-wide <tt class="docutils literal"><span class="pre"><span class="Identifier">Ctrl</span><span class="Operator">+</span><span class="Identifier">C</span></span></tt> policy.</p>
+<p>If your application may terminate while a prompt is active, add your own fallback cleanup in the application shutdown path. For that purpose cliprompts exposes <a class="reference internal nimdoc" title="proc restoreTerminalState()" href="#restoreTerminalState">restoreTerminalState</a> — a best-effort facade-level proc:</p>
+<pre class="listing"><span class="Keyword">import</span> <span class="Identifier">cliprompts</span>
+
+<span class="Keyword">try</span><span class="Punctuation">:</span>
+  <span class="Keyword">discard</span> <span class="Identifier">promptBool</span><span class="Punctuation">(</span><span class="StringLit">&quot;Continue?&quot;</span><span class="Punctuation">)</span>
+<span class="Keyword">finally</span><span class="Punctuation">:</span>
+  <span class="Identifier">restoreTerminalState</span><span class="Punctuation">(</span><span class="Punctuation">)</span></pre><p>Use <a class="reference internal nimdoc" title="proc restoreTerminalState()" href="#restoreTerminalState">restoreTerminalState()</a> only in application-level fallback cleanup. Normal prompt completion and prompt-local cancellation already restore terminal state internally.</p>
+
+<h2><a class="toc-backref" id="clipromptscolon-interactive-terminal-prompts-implementation-notes" href="#clipromptscolon-interactive-terminal-prompts-implementation-notes">Implementation notes</a></h2><p>Architecture follows the classic &quot;state → view&quot; pattern with a backend abstraction layer. Terminal I/O is isolated behind <tt class="docutils literal"><span class="pre"><span class="Identifier">TerminalBackend</span></span></tt>, allowing <tt class="docutils literal"><span class="pre"><span class="Identifier">MockTerminal</span></span></tt> for tests and real <tt class="docutils literal"><span class="pre"><span class="Identifier">RealTerminal</span></span></tt> for production. The modular design keeps rendering logic separate from I/O and state management. </p>
 </p>
     <div class="section" id="6">
   <h1><a class="toc-backref" href="#6">Imports</a></h1>
@@ -227,8 +241,8 @@
   <dd>
     
     
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L87" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L87" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L116" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L116" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -241,8 +255,8 @@
   <dd>
     
     Displays an error message with styled prefix.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L123" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L123" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -251,27 +265,26 @@
 <div id="promptBool-procs-all">
   <div id="promptBool,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptBool%2Cstring"><span class="Identifier">promptBool</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     <p>Prompts for a yes/no answer without a default.</p>
 <p>Accepts <tt class="docutils literal"><span class="pre"><span class="Identifier">y</span></span></tt>/<tt class="docutils literal"><span class="pre"><span class="Identifier">n</span></span></tt> case-insensitively. Enter on empty input is rejected and re-prompts until a valid answer is entered. Esc or Ctrl+C raises <tt class="docutils literal"><span class="pre"><span class="Identifier">IOError</span></span></tt>.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L204" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L204" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L235" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L235" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="promptBool,string,bool">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptBool%2Cstring%2Cbool"><span class="Identifier">promptBool</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     <p>Prompts for a yes/no answer.</p>
-<p>Accepts the registered shortcut keys case-insensitively: <tt class="docutils literal"><span class="pre"><span class="Identifier">y</span></span></tt> for yes and <tt class="docutils literal"><span class="pre"><span class="Identifier">n</span></span></tt> for no. Pressing Enter accepts <tt class="docutils literal"><span class="pre"><span class="Identifier">default</span></span></tt>. Esc or Ctrl+C cancels the prompt by raising <tt class="docutils literal"><span class="pre"><span class="Identifier">IOError</span></span></tt>.</p>
-<p>Example: </p>
+<p>Accepts the registered shortcut keys case-insensitively: <tt class="docutils literal"><span class="pre"><span class="Identifier">y</span></span></tt> for yes and <tt class="docutils literal"><span class="pre"><span class="Identifier">n</span></span></tt> for no. Pressing Enter accepts <tt class="docutils literal"><span class="pre"><span class="Identifier">default</span></span></tt>. Esc or Ctrl+C cancels the prompt by raising <tt class="docutils literal"><span class="pre"><span class="Identifier">IOError</span></span></tt>. </p>
 
 <p><strong class="examples_text">Example:</strong></p>
 <pre class="listing"><span class="Keyword">import</span> <span class="Identifier">src</span><span class="Operator">/</span><span class="Identifier">backend</span>
@@ -279,8 +292,8 @@
 <span class="Identifier">setBackend</span><span class="Punctuation">(</span><span class="Identifier">mock</span><span class="Punctuation">)</span>
 <span class="Identifier">mock</span><span class="Operator">.</span><span class="Identifier">queueInput</span><span class="Punctuation">(</span><span class="StringLit">&quot;Y</span><span class="EscapeSequence">\r</span><span class="StringLit">&quot;</span><span class="Punctuation">)</span>
 <span class="Identifier">doAssert</span> <span class="Identifier">promptBool</span><span class="Punctuation">(</span><span class="StringLit">&quot;Continue?&quot;</span><span class="Punctuation">,</span> <span class="Identifier">default</span> <span class="Operator">=</span> <span class="Identifier">false</span><span class="Punctuation">)</span></pre>
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L187" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L187" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L220" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L220" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -289,7 +302,7 @@
 <div id="promptDate-procs-all">
   <div id="promptDate,string,TimeFormat,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptDate%2Cstring%2CTimeFormat%2Cstring"><span class="Identifier">promptDate</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">format</span><span class="Other">:</span> <span class="Identifier">TimeFormat</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">DateTime</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeParseError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeParseError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -300,8 +313,8 @@
 <div class="admonition admonition-warning"><span class="admonition-warning-text"><b>Warning:</b></span>
 Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">TimeParseError</span></span></tt> if default is non-empty and unparseable.</div>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L288" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L288" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L319" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L319" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -320,8 +333,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <p><tt class="docutils literal"><span class="pre"><span class="Identifier">sortAlpha</span></span></tt> changes display order only. The initial selection is still <tt class="docutils literal"><span class="pre"><span class="Identifier">default</span></span></tt>, or <tt class="docutils literal"><span class="pre"><span class="Identifier">T</span><span class="Operator">.</span><span class="Identifier">low</span></span></tt> if you omit it.</p>
 <p>Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">ValueError</span></span></tt> at runtime if the enum type has no selectable values.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L239" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L239" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L270" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L270" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -334,8 +347,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <p><tt class="docutils literal"><span class="pre"><span class="Identifier">sortAlpha</span></span></tt> changes display order only. If <tt class="docutils literal"><span class="pre"><span class="Identifier">default</span></span></tt> is in <tt class="docutils literal"><span class="pre"><span class="Identifier">options</span></span></tt>, it is initially selected. Otherwise the prompt falls back to an arbitrary member of <tt class="docutils literal"><span class="pre"><span class="Identifier">options</span></span></tt>.</p>
 <p>Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">ValueError</span></span></tt> at runtime if <tt class="docutils literal"><span class="pre"><span class="Identifier">options</span></span></tt> is empty.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L252" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L252" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L283" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L283" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -351,8 +364,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <p>Returns a set of selected enum values. <tt class="docutils literal"><span class="pre"><span class="Identifier">sortAlpha</span></span></tt> changes only the displayed order; <tt class="docutils literal"><span class="pre"><span class="Identifier">defaults</span></span></tt> still refer to enum values, not sorted indices.</p>
 <p>Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">ValueError</span></span></tt> at runtime if any value in <tt class="docutils literal"><span class="pre"><span class="Identifier">defaults</span></span></tt> is not selectable.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L262" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L262" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L293" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L293" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -365,8 +378,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
     <p>Prompts to select from a subset of enum values (multi-select).</p>
 <p>Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">ValueError</span></span></tt> at runtime if <tt class="docutils literal"><span class="pre"><span class="Identifier">options</span></span></tt> is empty, or if any value in <tt class="docutils literal"><span class="pre"><span class="Identifier">defaults</span></span></tt> is not contained in <tt class="docutils literal"><span class="pre"><span class="Identifier">options</span></span></tt>.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L272" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L272" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L303" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L303" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -374,26 +387,25 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 </div>
 <div id="promptFloat-procs-all">
   <div id="promptFloat,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#promptFloat%2Cstring"><span class="Identifier">promptFloat</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#promptFloat%2Cstring"><span class="Identifier">promptFloat</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Convenience proc for float input without default.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L235" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L235" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L266" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L266" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="promptFloat,string,float">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptFloat%2Cstring%2Cfloat"><span class="Identifier">promptFloat</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">float</span> <span class="Other">=</span> <span class="FloatNumber">0.0</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">float</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Convenience proc for float input with default.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L231" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L231" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L262" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L262" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -401,25 +413,25 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 </div>
 <div id="promptInt-procs-all">
   <div id="promptInt,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#promptInt%2Cstring"><span class="Identifier">promptInt</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#promptInt%2Cstring"><span class="Identifier">promptInt</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Convenience proc for integer input without default.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L227" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L227" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L258" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L258" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="promptInt,string,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptInt%2Cstring%2Cint"><span class="Identifier">promptInt</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Convenience proc for integer input with default.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L223" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L223" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L254" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L254" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -433,8 +445,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
     <p>Prompts for a number without a default.</p>
 <p>Returns zero on empty input if T is a number, otherwise prompts until valid.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L217" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L217" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L248" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L248" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -445,8 +457,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
     <p>Prompts for a number with a default value.</p>
 <p>Validates input and re-prompts on invalid entries.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L211" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L211" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L242" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L242" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -461,8 +473,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
     <p>Search prompt with optional initial query.</p>
 <p>Simplified variant with immutable initial query. Matching is case-insensitive and token-based: each whitespace-separated token in the query must occur somewhere in the option text. Returns the selected option index.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L166" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L166" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L199" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L199" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -487,7 +499,6 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <ul class="simple"><li>selected option text when a match was confirmed</li>
 <li>raw typed query when <tt class="docutils literal"><span class="pre"><span class="Identifier">allowAny</span> <span class="Operator">=</span> <span class="Identifier">true</span></span></tt> accepted a non-match</li>
 </ul>
-<p>Example: </p>
 
 <p><strong class="examples_text">Example:</strong></p>
 <pre class="listing"><span class="Keyword">import</span> <span class="Identifier">src</span><span class="Operator">/</span><span class="Identifier">backend</span>
@@ -507,8 +518,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <span class="Keyword">let</span> <span class="Identifier">idx</span> <span class="Operator">=</span> <span class="Identifier">promptSearchMut</span><span class="Punctuation">(</span><span class="StringLit">&quot;Tag&quot;</span><span class="Punctuation">,</span> <span class="Operator">@</span><span class="Punctuation">[</span><span class="StringLit">&quot;nim&quot;</span><span class="Punctuation">,</span> <span class="StringLit">&quot;terminal&quot;</span><span class="Punctuation">]</span><span class="Punctuation">,</span> <span class="Identifier">query</span><span class="Punctuation">,</span> <span class="Identifier">allowAny</span> <span class="Operator">=</span> <span class="Identifier">true</span><span class="Punctuation">)</span>
 <span class="Identifier">doAssert</span> <span class="Identifier">idx</span> <span class="Operator">==</span> <span class="Operator">-</span><span class="DecNumber">1</span>
 <span class="Identifier">doAssert</span> <span class="Identifier">query</span> <span class="Operator">==</span> <span class="StringLit">&quot;custom&quot;</span></pre>
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L121" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L121" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L156" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L156" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -526,8 +537,7 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">multi</span></span></tt>: If true, allows multiple selections (space to toggle).</li>
 <li><tt class="docutils literal"><span class="pre"><span class="Identifier">defaults</span></span></tt>: Pre-selected indices for multi-select mode.</li>
 </ul>
-<p>Returns a set of selected indices. For single selection this is still a set, usually with exactly one member.</p>
-<p>Example: </p>
+<p>Returns a set of selected indices. For single selection this is still a set, usually with exactly one member. </p>
 
 <p><strong class="examples_text">Example:</strong></p>
 <pre class="listing"><span class="Keyword">import</span> <span class="Identifier">src</span><span class="Operator">/</span><span class="Identifier">backend</span>
@@ -536,8 +546,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <span class="Identifier">mock</span><span class="Operator">.</span><span class="Identifier">queueInput</span><span class="Punctuation">(</span><span class="StringLit">&quot;</span><span class="EscapeSequence">\27</span><span class="StringLit">[B</span><span class="EscapeSequence">\r</span><span class="StringLit">&quot;</span><span class="Punctuation">)</span> <span class="Comment"># Down, Enter</span>
 <span class="Keyword">let</span> <span class="Identifier">selected</span> <span class="Operator">=</span> <span class="Identifier">promptSelection</span><span class="Punctuation">(</span><span class="StringLit">&quot;Pick&quot;</span><span class="Punctuation">,</span> <span class="Operator">@</span><span class="Punctuation">[</span><span class="StringLit">&quot;red&quot;</span><span class="Punctuation">,</span> <span class="StringLit">&quot;green&quot;</span><span class="Punctuation">,</span> <span class="StringLit">&quot;blue&quot;</span><span class="Punctuation">]</span><span class="Punctuation">)</span>
 <span class="Identifier">doAssert</span> <span class="Identifier">selected</span> <span class="Operator">==</span> <span class="Punctuation">{</span><span class="DecNumber">1'i16</span><span class="Punctuation">}</span></pre>
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L98" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L98" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L135" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L135" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -546,7 +556,7 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <div id="promptString-procs-all">
   <div id="promptString,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptString%2Cstring%2Cstring"><span class="Identifier">promptString</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -555,8 +565,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 </ul>
 <p>Returns the entered string, or default if user pressed Enter without typing.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L177" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L177" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L210" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L210" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -565,7 +575,7 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <div id="promptStrings-procs-all">
   <div id="promptStrings,string,openArray[string]">
   <dt><pre><span class="Keyword">proc</span> <a href="#promptStrings%2Cstring%2CopenArray%5Bstring%5D"><span class="Identifier">promptStrings</span></a><span class="Other">(</span><span class="Identifier">question</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">default</span><span class="Other">:</span> <span class="Identifier">openArray</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span> <span class="Other">=</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span>
-    <span class="Identifier">string</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">EOFError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">string</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
               <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -574,8 +584,24 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 </ul>
 <p>User presses Enter on empty line to finish.</p>
 
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L279" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L279" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L310" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L310" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="restoreTerminalState-procs-all">
+  <div id="restoreTerminalState">
+  <dt><pre><span class="Keyword">proc</span> <a href="#restoreTerminalState"><span class="Identifier">restoreTerminalState</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span>
+                              <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    <p>Best-effort fallback cleanup for application shutdown paths.</p>
+<p>This is intended for top-level <tt class="docutils literal"><span class="pre"><span class="Keyword">finally</span></span></tt> blocks, <tt class="docutils literal"><span class="pre"><span class="Identifier">std</span><span class="Operator">/</span><span class="Identifier">exitprocs</span></span></tt>, or similar host-application cleanup. Normal prompt execution already restores terminal state internally.</p>
+
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L127" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L127" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -596,8 +622,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
 <span class="Identifier">mock</span><span class="Operator">.</span><span class="Identifier">queueInput</span><span class="Punctuation">(</span><span class="StringLit">&quot;abc</span><span class="EscapeSequence">\r</span><span class="StringLit">&quot;</span><span class="Punctuation">)</span>
 <span class="Keyword">discard</span> <span class="Identifier">promptString</span><span class="Punctuation">(</span><span class="StringLit">&quot;Name&quot;</span><span class="Punctuation">)</span>
 <span class="Identifier">doAssert</span> <span class="Identifier">mock</span><span class="Operator">.</span><span class="Identifier">lines</span><span class="Punctuation">[</span><span class="DecNumber">0</span><span class="Punctuation">]</span><span class="Operator">.</span><span class="Identifier">contains</span><span class="Punctuation">(</span><span class="StringLit">&quot;Name&quot;</span><span class="Punctuation">)</span></pre>
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L300" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L300" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L331" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L331" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -610,8 +636,8 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
   <dd>
     
     Displays a success message with styled prefix.
-    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L90" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L90" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/indiscipline/cliprompts/tree/main/cliprompts.nim#L119" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/indiscipline/cliprompts/edit/devel/cliprompts.nim#L119" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -627,7 +653,7 @@ Raises <tt class="docutils literal"><span class="pre"><span class="Identifier">T
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-11 21:11:29 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-04-24 00:59:56 UTC</small>
       </div>
     </div>
   </div>

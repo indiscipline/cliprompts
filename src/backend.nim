@@ -147,6 +147,13 @@ proc showCursor*(t: TerminalBackend) =
   if t.kind == tkReal:
     showCursor(t.fd)
 
+proc restoreTerminalState*(t: TerminalBackend) =
+  ## Restores visible terminal state after an interactive prompt exits.
+  if t.kind == tkReal:
+    resetAttributes(t.fd)
+    showCursor(t.fd)
+    t.fd.flushFile()
+
 proc showStyled*(backend: TerminalBackend, msgType: MsgType, text: string) =
   for (prefix, line) in formatPrefixed(msgType, text):
     if backend.kind == tkReal and backend.showColor:

@@ -36,13 +36,19 @@ template runPrompt[S, R](
       showStyled(backend, HintMsg, hint)
 
   # 3. Run interactive loop
-  let finalState = runInteractive(
-    backend,
-    initialState,
-    renderProc,
-    handleProc,
-    textual
-  )
+  let finalState =
+    try:
+      runInteractive(
+        backend,
+        initialState,
+        renderProc,
+        handleProc,
+        textual
+      )
+    except IOError:
+      if hasHint:
+        backend.clearLines(1)
+      raise
 
   # 4. Extract answer and display text
   let answer = answerProc(finalState)

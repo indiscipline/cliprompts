@@ -33,6 +33,13 @@ suite "End-to-end prompts":
     check idx == -1
     check query == "x"
 
+  test "search cancel clears interactive frame and hint":
+    mock.queueInput("\3")
+    expect IOError:
+      discard promptSearch("Search", strings, maxShown=5)
+    check mock.lines.len == 1
+    check mock.lines[0].contains("Search")
+
 suite "Input prompts via MockTerminal":
   # lines layout: [PromptPrefix, PromptText, AnswerPrefix, AnswerText]
   setup:
@@ -73,6 +80,8 @@ suite "Input prompts via MockTerminal":
     mock.queueInput("\27\27")
     expect IOError:
       discard promptBool("Continue?", default = true)
+    check mock.lines.len == 1
+    check mock.lines[0].contains("Continue?")
 
   test "promptNumber accepts valid int":
     mock.queueInput("123\r")

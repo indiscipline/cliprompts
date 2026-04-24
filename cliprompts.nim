@@ -56,16 +56,6 @@ runnableExamples("-r:off"):
   # Partial enum selection
   let opt = promptEnum[Color]("Pick an accent", {Red, Blue}, sortAlpha = true)
 
-## Implementation notes
-## --------------------
-##
-## Architecture follows the classic "state → view" pattern with a backend
-## abstraction layer. Terminal I/O is isolated behind `TerminalBackend`, allowing
-## `MockTerminal` for tests and real `RealTerminal` for production. The modular
-## design keeps rendering logic separate from I/O and state management.
-##
-## Dependencies: `std/[terminal, times, strutils, algorithm, sequtils, options]`.
-##
 ## Notes on return values
 ## ----------------------
 ##
@@ -78,6 +68,45 @@ runnableExamples("-r:off"):
 ## - Search matching is case-insensitive and token-based: whitespace splits
 ##   the query into tokens and every token must appear as a substring in the
 ##   option text.
+##
+## Cancellation and Cleanup
+## ------------------------
+##
+## Prompt-local cancellation is handled by cliprompts itself. If the user
+## cancels with `Esc` or `Ctrl+C` while the prompt loop is running, the active
+## interactive frame is cleared, visible terminal state is restored, and the
+## prompt raises `IOError` to the caller.
+##
+## This guarantee is intentionally scoped to cancellation observed inside the
+## prompt loop. It does not cover process-level termination outside that flow,
+## such as an unhandled exception aborting the host program, `quit` from
+## application code, or a custom process-wide `Ctrl+C` policy.
+##
+## If your application may terminate while a prompt is active, add your own
+## fallback cleanup in the application shutdown path. For that purpose cliprompts
+## exposes `restoreTerminalState`_ — a best-effort facade-level proc:
+##
+## .. code-block:: nim
+##
+##   import cliprompts
+##
+##   try:
+##     discard promptBool("Continue?")
+##   finally:
+##     restoreTerminalState()
+##
+## Use `restoreTerminalState()`_ only in application-level fallback cleanup.
+## Normal prompt completion and prompt-local cancellation already restore
+## terminal state internally.
+##
+## Implementation notes
+## --------------------
+##
+## Architecture follows the classic "state → view" pattern with a backend
+## abstraction layer. Terminal I/O is isolated behind `TerminalBackend`, allowing
+## `MockTerminal` for tests and real `RealTerminal` for production. The modular
+## design keeps rendering logic separate from I/O and state management.
+##
 
 import src/[backend, prompts, types]
 import std/[times, options]
@@ -95,6 +124,14 @@ proc error*(message: string) =
   ## Displays an error message with styled prefix.
   displayMessageLine(ErrorMsg, message)
 
+proc restoreTerminalState*() =
+  ## Best-effort fallback cleanup for application shutdown paths.
+  ##
+  ## This is intended for top-level `finally` blocks, `std/exitprocs`, or
+  ## similar host-application cleanup. Normal prompt execution already restores
+  ## terminal state internally.
+  backend.restoreTerminalState(defaultBackend)
+
 proc promptSelection*[T](question: string, options: openArray[T],
                         multi: bool = false, defaults: set[int16] = {}): set[int16] =
   ## Displays a list of options and waits for user selection.
@@ -106,8 +143,6 @@ proc promptSelection*[T](question: string, options: openArray[T],
   ##
   ## Returns a set of selected indices. For single selection this is still a
   ## set, usually with exactly one member.
-  ##
-  ## Example:
   ##
   runnableExamples():
     import src/backend
@@ -139,8 +174,6 @@ proc promptSearchMut*[T](question: string; options: openArray[T];
   ##
   ## - selected option text when a match was confirmed
   ## - raw typed query when `allowAny = true` accepted a non-match
-  ##
-  ## Example:
   ##
   runnableExamples():
     import src/backend
@@ -190,8 +223,6 @@ proc promptBool*(question: string; default: bool): bool =
   ## Accepts the registered shortcut keys case-insensitively: `y` for yes and
   ## `n` for no. Pressing Enter accepts `default`. Esc or Ctrl+C cancels the
   ## prompt by raising `IOError`.
-  ##
-  ## Example:
   ##
   runnableExamples():
     import src/backend
