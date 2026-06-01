@@ -264,7 +264,7 @@ proc promptImpl[T](
   )
   value
 
-proc promptTyped*[T: SomeNumber | string](
+proc promptTyped*[T: SomeNumber | range | string](
     backend: TerminalBackend,
     question: string,
     default: Option[T],
