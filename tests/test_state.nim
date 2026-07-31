@@ -78,6 +78,20 @@ suite "State machines":
     check s.getFiltered() == @[0, 1, 2]   # all three contain "a"
     check s.current == 0                   # backspace resets current
 
+  test "search: backspace removes a full rune, not a partial byte":
+    var s = initSearch(["heart", "earth", "banana"])
+    s.updateQuery("heart \u{2026}")        # ends with a 3-byte ellipsis
+    s.backspace()
+    check s.query == "heart "
+    check s.getFiltered() == @[0]          # no crash, still valid filter
+
+  test "search: backspace over a truncated rune does not crash":
+    var s = initSearch(["heart", "earth", "banana"])
+    s.updateQuery("heart \xE2\x80")        # truncated ellipsis (2 of 3 bytes)
+    s.backspace()
+    check s.query == "heart "
+    check s.getFiltered() == @[0]          # must not raise IndexDefect
+
 suite "Suggested answers":
   test "registerSuggestedAnswers uses next free character on collision":
     let answers = registerSuggestedAnswers(["cancel", "cat", "continue"])

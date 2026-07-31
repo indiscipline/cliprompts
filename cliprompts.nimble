@@ -1,4 +1,4 @@
-version       = "0.1.1"
+version       = "0.1.2"
 author        = "Kirill I."
 description   = "Interactive command line prompts"
 license       = "GPL-2.0-or-later"

@@ -176,9 +176,22 @@ proc addChar*[T](state: var SearchState[T], ch: char) =
   state.windowStart = 0
   state.cacheValid = false
 
+proc removeLastRune*(s: var string) =
+  ## Deletes the final rune from `s`. A truncated trailing multi-byte
+  ## sequence is removed entirely so `s` never ends mid-rune.
+  ## Not delegated to std/unicode: `runeAt`/`runeAtPos` are forward and
+  ## position-based, while `lastRune`'s safety on malformed trailing bytes
+  ## is incidental (fastRuneAt's replRune fallback), unlike the explicit
+  ## walk-back contract here.
+  if s.len == 0: return
+  var i = s.high
+  while i > 0 and (uint8(s[i]) and 0xC0) == 0x80:
+    dec i
+  s.setLen(i)
+
 proc backspace*[T](state: var SearchState[T]) =
   if state.query.len > 0:
-    state.query.setLen(state.query.len - 1)
+    state.query.removeLastRune()
     state.current = 0
     state.windowStart = 0
     state.cacheValid = false
@@ -245,8 +258,7 @@ proc updateInput*(state: var StringsState, ch: char) =
   state.input.add(ch)
 
 proc backspace*(state: var StringsState) =
-  if state.input.len > 0:
-    state.input.setLen(state.input.len - 1)
+  state.input.removeLastRune()
 
  # Validation state operations
 
@@ -260,8 +272,7 @@ proc updateInput*[T](state: var ValidationState[T], ch: char) =
   state.input.add(ch)
 
 proc backspace*[T](state: var ValidationState[T]) =
-  if state.input.len > 0:
-    state.input.setLen(state.input.len - 1)
+  state.input.removeLastRune()
 
 proc validate*(input: string, default: Option[string]): ValidationResult[string] =
   let finalVal = if input.len == 0 and default.isSome:
